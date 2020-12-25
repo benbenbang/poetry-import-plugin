@@ -21,7 +21,8 @@ import pty
 from logging import getLogger
 from os import PathLike
 from pathlib import Path
-from subprocess import PIPE, run
+from select import select
+from subprocess import PIPE, Popen
 from typing import Union
 
 # pypi library
@@ -71,26 +72,51 @@ def read_requirments(ctx, req_path: Union[str, PathLike]) -> str:
     return [f"{dep.strip().split(';')[0]}" for dep in deps]
 
 
-def inpty(ctx, cmd):
-    disposable_outputs = []
+def inpty(ctx, cmd, env=None, log=None):
+    """
+    execute command and use select + pty to pull process stdout and stderr
+    to file-object 'log' while simultaneously logging to stdout
+    """
+    try:
+        exec_env = {}
+        exec_env.update(os.environ)
 
-    click.secho(
-        "\nHint: Hit any key to exit after the process's finished.\n", fg="yellow"
-    )
+        # copy the OS environment into our local environment
+        if env is not None:
+            exec_env.update(env)
 
-    def read(fd):
-        data = os.read(fd, 1024)
-        disposable_outputs.append(data)
-        return data
+        # create a pipe to receive stdout and stderr from process
+        master, slave = pty.openpty()
 
-    ptyreturn = pty.spawn(cmd, read)
+        p = Popen(cmd, shell=False, env=exec_env, stdout=slave, stderr=slave)
 
-    assert ptyreturn == 0, ctx.abort()
+        # Loop while the process is executing
+        while p.poll() is None:
+            # Loop long as the selct mechanism indicates there
+            # is data to be read from the buffer
+            while len(select([master], [], [], 0)[0]) == 1:
+                # Read up to a 1 KB chunk of data
+                buf = os.read(master, 1024)
+                # Stream data to our stdout's fd of 0
+                os.write(0, buf)
+                if log is not None:
+                    log.write(buf)
+
+    except Exception:
+        ctx.abort()
+
+    else:
+        return p.returncode
+
+    finally:
+        # cleanup
+        os.close(master)
+        os.close(slave)
 
 
 def toml_at_root():
     try:
-        root = run(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=PIPE)
+        root = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=PIPE)
         root = root.stdout.decode().strip()
         return True if (Path(root) / "pyproject.toml").is_file() else False
     except Exception:
