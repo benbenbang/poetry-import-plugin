@@ -5,6 +5,8 @@ omit =
     # Specific files
     */__init__.py
     */setup.py
+    req2toml/console.py
+
 source = ./req2toml
 
 [report]
