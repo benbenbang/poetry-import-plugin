@@ -90,7 +90,11 @@ def read_requirments(ctx: Context, req_path: Union[str, PathLike]) -> str:
     with open(path, "r") as file:
         deps = file.readlines()
 
-    return [f"{dep.strip().split(';')[0]}" for dep in deps]
+    return [
+        "".join([d.strip() for d in dep])
+        for dep in [dep.strip().split() for dep in deps]
+        if dep
+    ]
 
 
 def inpty(
