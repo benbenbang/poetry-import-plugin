@@ -155,9 +155,13 @@ def inpty(
         os.close(slave)
 
 
-def toml_at_root():
+def toml_at_root() -> bool:
+    """ Get the root dir of a Git project and try to locate the pyproject.toml
+
+    Returns:
+        bool: True if pyproject.toml exists
+    """
     try:
-        # get the root dir of a Git project and try to locate the pyproject.toml
         root = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=PIPE)
         root = root.stdout.decode().strip()
         return True if (Path(root) / "pyproject.toml").is_file() else False

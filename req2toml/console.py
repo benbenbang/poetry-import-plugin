@@ -50,6 +50,14 @@ logger = getLogger("console")
     type=click.BOOL,
 )
 def cli(filepath: str, install: bool, verbose: bool):
+    """ CLI Endpoint: To convert requirements file to pyproject.toml & poetry lock
+
+    Args:
+        filepath (str): Path to the requirments file
+        install (bool): A Flag. By default, the cli only update the lock without install the deps. Add `--install` flag to install the deps simultaneously.
+        verbose (bool): A Flag. Add `-v` to print out debug logs
+
+    """
     ctx = click.get_current_context()
 
     if verbose:
