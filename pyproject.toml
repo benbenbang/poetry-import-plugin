@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "req2toml"
+version = "1.0.0"
+description = "Convert requirements.txt to pyproject.toml"
+authors = ["Ben Chen <benbenbang@github"]
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+]
+
+[tool.poetry.scripts]
+req2lock = 'req2toml.console:cli'
+
+[tool.poetry.dependencies]
+python = "^3.7"
+click = "7.1.2"
+
+[tool.poetry.dev-dependencies]
+pre-commit = "^2.9.3"
+pytest = "^6.1.2"
+unittest = "^0.0"
+twine = "^3.2.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
