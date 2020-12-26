@@ -8,6 +8,8 @@ from tests.mixin import CaseMixin, TempfileMixin
 
 class TestReadRequirmentsFormattedContent(CaseMixin, TempfileMixin, TestCase):
     def test_read_req1_from_right_path_with_txt(self):
+        self.set_read_requirements_cases()
+
         self.tmpPath = self._create_tempfile(
             self.right_path_txt, self.formatted_content
         )
@@ -21,6 +23,8 @@ class TestReadRequirmentsFormattedContent(CaseMixin, TempfileMixin, TestCase):
 
 class TestReadRequirmentsUnformattedContent(CaseMixin, TempfileMixin, TestCase):
     def test_read_req2_from_right_path_with_txt(self):
+        self.set_read_requirements_cases()
+
         self.tmpPath = self._create_tempfile(
             self.right_path_txt, self.unformatted_content
         )
@@ -34,6 +38,8 @@ class TestReadRequirmentsUnformattedContent(CaseMixin, TempfileMixin, TestCase):
 
 class TestReadRequirmentsMessyContent(CaseMixin, TempfileMixin, TestCase):
     def test_read_req3_from_right_path_with_txt(self):
+        self.set_read_requirements_cases()
+
         self.tmpPath = self._create_tempfile(self.right_path_txt, self.messy_content)
         reqs = read_requirments(self.ctx, self.tmpPath)
 
@@ -45,6 +51,8 @@ class TestReadRequirmentsMessyContent(CaseMixin, TempfileMixin, TestCase):
 
 class TestReadRequirmentsRstExt(CaseMixin, TempfileMixin, TestCase):
     def test_read_req_from_right_path_with_rst(self):
+        self.set_read_requirements_cases()
+
         self.tmpPath = self._create_tempfile(
             self.support_fmt_file, self.formatted_content
         )
@@ -59,6 +67,8 @@ class TestReadRequirmentsRstExt(CaseMixin, TempfileMixin, TestCase):
 @expectedFailure
 class TestReadRequirmentsFileNotFound(CaseMixin, TempfileMixin, TestCase):
     def test_read_req_from_wrong_path_with_txt(self):
+        self.set_read_requirements_cases()
+
         self.tmpPath = self._create_tempfile(self.wrong_path_txt, self.messy_content)
         read_requirments(self.ctx, self.wrong_path_txt)
 
@@ -66,6 +76,8 @@ class TestReadRequirmentsFileNotFound(CaseMixin, TempfileMixin, TestCase):
 @expectedFailure
 class TestReadRequirmentsMarkdownExt(CaseMixin, TempfileMixin, TestCase):
     def test_read_req_from_right_path_with_rst(self):
+        self.set_read_requirements_cases()
+
         self.tmpPath = self._create_tempfile(
             self.unsupport_fmt_file, self.formatted_content
         )

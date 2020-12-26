@@ -1,6 +1,7 @@
 # standard library
 import os
 from pathlib import Path
+from subprocess import PIPE, Popen
 from tempfile import mkstemp
 
 # pypi library
@@ -10,10 +11,7 @@ __all__ = ["CaseMixin", "TempfileMixin"]
 
 
 class CaseMixin:
-    def setUp(self):
-        Path("./tmp").mkdir(exist_ok=True)
-        self.ctx = Context(Command("Test"))
-
+    def set_read_requirements_cases(self):
         # Paths Setup
         self.right_path_txt = Path("./tmp/right_path.txt")
         self.wrong_path_txt = Path("./tmp/not_found.txt")
@@ -35,12 +33,30 @@ pandas==0.25.2
 \n\n\n\n\n\n\n\t\tpandas==0.25.2
         """
 
-    def tearDown(self):
-        self._delete_tempfile(self.tmpPath)
-        Path("./tmp").rmdir()
+    def set_toml_at_root_cases(self):
+        self.toml_present_path = "./tmp/pyproject.toml"
+        self.toml_not_present_path = "./tmp/pyproject_not_present.toml"
 
 
 class TempfileMixin:
+    def setUp(self):
+        Path("./tmp").mkdir(exist_ok=True)
+        self.ctx = Context(Command("Test"))
+
+    def tearDown(self):
+        if hasattr(self, "tmpPath"):
+            self._delete_tempfile(self.tmpPath)
+
+        if Path("./tmp").is_dir():
+            try:
+                Path("./tmp").rmdir()
+            except OSError:
+                print(
+                    "Unable to delete ./tmp folder due to none empty. Going to remove by rm -rf"
+                )
+                proc = Popen(["rm", "-rf", "./tmp"])
+                proc.communicate()
+
     def _get_splitted_path(self, path):
         return (
             "/".join([f"{p}" for p in reversed([p for p in path.parents])]),
@@ -58,3 +74,45 @@ class TempfileMixin:
 
     def _delete_tempfile(self, path):
         os.unlink(path)
+
+    def _create_toml(self, path, content):
+        Path(path).touch()
+        with open(path, "w+") as file:
+            file.write(content)
+
+    def _create_temp_nested_dir(self):
+        self.nestedDir = Path("./tmp") / "nested_tmp"
+        self.nestedDir.mkdir(exist_ok=True)
+
+    def _delete_temp_nested_dir(self):
+        self.nestedDir.rmdir()
+
+    def _git_init(self):
+        try:
+            os.chdir("./tmp")
+            proc = Popen(["git", "init"], stdout=PIPE, stderr=PIPE)
+            result = next(
+                (r.decode for r in proc.communicate() if r), "Unable to create Git Repo"
+            )
+            os.chdir("..")
+            assert result != "Unable to create Git Repo"
+            ok = True
+        except AssertionError:
+            print("Unable to init git. Abort!")
+            ok = False
+
+        return ok
+
+    def _rm_git(self):
+        try:
+            os.chdir("./tmp")
+            proc = Popen(["rm", "-rf", ".git"], stdout=PIPE, stderr=PIPE)
+            os.chdir("..")
+            result = [r.decode() for r in proc.communicate() if r]
+            assert len(result) == 0
+            ok = True
+        except AssertionError:
+            print("Unable to delete git. Abort!")
+            ok = False
+
+        return ok
