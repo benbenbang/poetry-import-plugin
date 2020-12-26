@@ -11,6 +11,8 @@ __all__ = ["CaseMixin", "TempfileMixin"]
 
 
 class CaseMixin:
+    ctx = Context(Command("Test"))
+
     def set_read_requirements_cases(self):
         # Paths Setup
         self.right_path_txt = Path("./tmp/right_path.txt")
@@ -37,11 +39,15 @@ pandas==0.25.2
         self.toml_present_path = "./tmp/pyproject.toml"
         self.toml_not_present_path = "./tmp/pyproject_not_present.toml"
 
+    def set_in_pty_cases(self):
+        self.return_zero_cmd1 = ["echo", "Hello", "world"]
+        self.return_zero_cmd2 = "echo Hello world"
+        self.return_error_cmd = ["echo Hello world"]
+
 
 class TempfileMixin:
     def setUp(self):
         Path("./tmp").mkdir(exist_ok=True)
-        self.ctx = Context(Command("Test"))
 
     def tearDown(self):
         if hasattr(self, "tmpPath"):
