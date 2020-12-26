@@ -168,8 +168,8 @@ def toml_at_root() -> bool:
         bool: True if pyproject.toml exists
     """
     try:
-        root = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=PIPE)
-        root = root.stdout.decode().strip()
+        proc = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=PIPE)
+        root = next(r.decode().strip() for r in proc.communicate() if r)
         return True if (Path(root) / "pyproject.toml").is_file() else False
     except Exception:
         return False
