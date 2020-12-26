@@ -2,7 +2,7 @@
 name = "req2toml"
 version = "1.1.0"
 description = "Convert requirements.txt to pyproject.toml"
-authors = ["Ben Chen <benbenbang@github"]
+authors = ["Ben Chen <benbenbang@github>"]
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 4 - Beta",
