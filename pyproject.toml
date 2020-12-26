@@ -2,7 +2,7 @@
 name = "req2toml"
 version = "1.1.0"
 description = "Convert requirements.txt to pyproject.toml"
-authors = ["Ben Chen <benbenbang@github"]
+authors = ["Ben Chen <benbenbang@github>"]
 license = "Apache-2.0"
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,6 +23,7 @@ req2lock = 'req2toml.console:cli'
 [tool.poetry.dependencies]
 python = "^3.7"
 click = "7.1.2"
+pytest-cov = "^2.10.1"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.9.3"

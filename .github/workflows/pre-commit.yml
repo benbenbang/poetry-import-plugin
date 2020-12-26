@@ -1,0 +1,39 @@
+name: "CI: Pre-commit"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup python latest version
+      uses: actions/setup-python@v2
+
+    - name: Set Head
+      run: |
+        echo "Pull request's branch name is: ${BRANCH:-$BASE_REF}"
+        git remote set-head origin "${BRANCH:-$BASE_REF}"
+      env:
+        BRANCH: ${{ github.head_ref }}
+        BASE_REF: main
+
+    - name: Run pre-commit test on Push Request
+      uses: pre-commit/action@v2.0.0
+      with:
+        extra_args: --config .pre-commit-config.yaml -v --from-ref origin/HEAD --to-ref HEAD
+      if: github.event_name == 'pull_request'
+
+    - name: Run pre-commit test on Main
+      uses: pre-commit/action@v2.0.0
+      with:
+        extra_args: --config .pre-commit-config.yaml -v --all
+      if: github.event_name != 'pull_request'
