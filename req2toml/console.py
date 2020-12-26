@@ -26,17 +26,38 @@ logger = getLogger("console")
 
 
 @click.command()
-@click.option("filepath", "-f", required=True, help="Path to requirements.txt")
+@click.option(
+    "filepath",
+    "-f",
+    required=True,
+    help="Path to requirements.txt",
+    type=click.Path(exists=True, readable=True, file_okay=True, dir_okay=False),
+)
 @click.option(
     "install",
     "--install",
+    default=False,
     is_flag=True,
     help="By default, it will only update the lock, add this flag to install the dependencies at the same time.",
+    type=click.BOOL,
 )
 @click.option(
-    "verbose", "-v", is_flag=True, help="Enable verbose mode to print out the logs",
+    "verbose",
+    "-v",
+    default=False,
+    is_flag=True,
+    help="Enable verbose mode to print out the logs",
+    type=click.BOOL,
 )
-def cli(filepath, install, verbose):
+def cli(filepath: str, install: bool, verbose: bool):
+    """ CLI Endpoint: To convert requirements file to pyproject.toml & poetry lock
+
+    Args:
+        filepath (str): Path to the requirments file
+        install (bool): A Flag. By default, the cli only update the lock without install the deps. Add `--install` flag to install the deps simultaneously.
+        verbose (bool): A Flag. Add `-v` to print out debug logs
+
+    """
     ctx = click.get_current_context()
 
     if verbose:
