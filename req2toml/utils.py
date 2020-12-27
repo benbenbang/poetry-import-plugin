@@ -22,11 +22,13 @@ from logging import getLogger
 from os import PathLike
 from pathlib import Path
 from select import select
+from shlex import split
 from subprocess import PIPE, Popen
-from typing import Union
+from typing import ByteString, Dict, List, Union
 
 # pypi library
 import click
+from click import Context
 
 # Support extension
 SUPPORT_TYPE = (".txt", ".rst")
@@ -38,7 +40,26 @@ logger.addHandler(handler)
 logger.setLevel(level="ERROR")
 
 
-def read_requirments(ctx, req_path: Union[str, PathLike]) -> str:
+def read_requirments(ctx: Context, req_path: Union[str, PathLike]) -> str:
+    """ Read Requirments.txt from the given path after passed several checkes
+
+    Note
+        1. Starting `if` is to check that the requirements.txt (or in your way of naming) exists at the given path
+        2. Check pyproject.toml is at the current dir or in the root dir of a root dir of a GIT project
+        3. Check the reqs file is a support type
+        4. Read and clean the dependencies that are listed in the file
+
+    Args:
+        ctx (click.Context): a click Context object which is used to control the flow
+        req_path (str, PathLike): path in str or PathLike (pathlib) type object of a file
+
+    Returns:
+        deps (str): Dependencies in list
+
+    Raises:
+        ctx.Abort: Abort by click if encounter error(s)
+
+    """
     logger.debug(f"[DEBUG] Get input path: {req_path}")
 
     path: PathLike = Path(req_path)
@@ -72,32 +93,52 @@ def read_requirments(ctx, req_path: Union[str, PathLike]) -> str:
     return [f"{dep.strip().split(';')[0]}" for dep in deps]
 
 
-def inpty(ctx, cmd, env=None, log=None):
-    """
-    execute command and use select + pty to pull process stdout and stderr
-    to file-object 'log' while simultaneously logging to stdout
+def inpty(
+    ctx: Context, cmd: Union[str, List], env: Dict = None, log: ByteString = None
+):
+    """ inpty polls colorful stdout of poetry to the terminal
+
+        This function executes command and use select + pty to pull process stdout and stderr to file-object 'log' in non-blocking way, so it can simultaneously logging to stdout and close by itself after the process is done.
+
+    Args:
+        ctx (click.Context): a click Context object which is used to control the flow
+        cmd (str, List): command that will be passed to a subprocess
+        env (Dict): copy current env settings to pty pseudo one to ensure process
+        log (ByteString): A disposable container to collect stdout which is polled from the subprocess
+
+    Returns:
+        returncode (int): Result status of the process
+
+    Raise:
+        click.Abort: Abort by click if encounter error(s)
+
     """
     try:
         exec_env = {}
         exec_env.update(os.environ)
 
-        # copy the OS environment into our local environment
+        # copy the current OS environment into the local environment
         if env is not None:
             exec_env.update(env)
 
-        # create a pipe to receive stdout and stderr from process
+        # create master & slave pipes to receive stdout and stderr from process
         master, slave = pty.openpty()
+
+        # check cmd is a list, otherwise if try to split a string and check it can be well reformat
+        if not isinstance(cmd, list) and isinstance(cmd, str):
+            # First check it will the same, then keep processing, otherwise abort the process
+            assert cmd == " ".join(split(cmd)), ctx.abort()
+            cmd = split(cmd)
 
         p = Popen(cmd, shell=False, env=exec_env, stdout=slave, stderr=slave)
 
         # Loop while the process is executing
         while p.poll() is None:
-            # Loop long as the selct mechanism indicates there
-            # is data to be read from the buffer
+            # Loop long as the selct mechanism indicates there is data to be read from the buffer
             while len(select([master], [], [], 0)[0]) == 1:
                 # Read up to a 1 KB chunk of data
                 buf = os.read(master, 1024)
-                # Stream data to our stdout's fd of 0
+                # Stream data to the stdout's fd of 0
                 os.write(0, buf)
                 if log is not None:
                     log.write(buf)
@@ -114,7 +155,12 @@ def inpty(ctx, cmd, env=None, log=None):
         os.close(slave)
 
 
-def toml_at_root():
+def toml_at_root() -> bool:
+    """ Get the root dir of a Git project and try to locate the pyproject.toml
+
+    Returns:
+        bool: True if pyproject.toml exists
+    """
     try:
         root = Popen(["git", "rev-parse", "--show-toplevel"], stdout=PIPE, stderr=PIPE)
         root = root.stdout.decode().strip()
