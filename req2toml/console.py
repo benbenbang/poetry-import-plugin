@@ -20,7 +20,8 @@ from logging import getLogger
 # pypi library
 import click
 
-from .utils import inpty, read_requirments
+# req2toml plugin
+from req2toml.utils import append, extend, inpty, read_requirments
 
 logger = getLogger("console")
 
@@ -42,7 +43,7 @@ logger = getLogger("console")
     type=click.BOOL,
 )
 @click.option(
-    "install",
+    "dev",
     "--dev",
     default=False,
     is_flag=True,
@@ -74,9 +75,9 @@ def cli(filepath: str, install: bool, dev: bool, verbose: bool):
     requirements = read_requirments(ctx, filepath)
 
     command = ["poetry", "add"]
-    command = command if install else command.append("--lock")
-    command = command.append("--dev") if dev else command
-    command.extend(requirements)
+    command = command if install else append(command, "--lock")
+    command = append(command, "--dev") if dev else command
+    command = extend(command, requirements)
 
     logger.debug(f"[DEBUG] Command list: {command}")
     logger.debug(f"[DEBUG] Running cmd: {' '.join(command)}")

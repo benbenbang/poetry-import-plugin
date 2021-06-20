@@ -26,7 +26,7 @@ from pathlib import Path
 from select import select
 from shlex import split
 from subprocess import PIPE, Popen
-from typing import ByteString, Dict, List, Union
+from typing import Any, ByteString, Dict, List, Union
 
 # pypi library
 import click
@@ -173,3 +173,15 @@ def toml_at_root() -> bool:
         return True if (Path(root) / "pyproject.toml").is_file() else False
     except Exception:
         return False
+
+
+def append(lst: List, el: Any) -> List:
+    lst.append(el)
+    return lst
+
+
+def extend(lst: List[Any], el: List[Any]):
+    if not isinstance(el, list):
+        raise TypeError("el need to be a list")
+    lst.extend(el)
+    return lst
