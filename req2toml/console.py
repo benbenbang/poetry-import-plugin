@@ -42,6 +42,14 @@ logger = getLogger("console")
     type=click.BOOL,
 )
 @click.option(
+    "install",
+    "--dev",
+    default=False,
+    is_flag=True,
+    help="Add to the dev section in the project toml file",
+    type=click.BOOL,
+)
+@click.option(
     "verbose",
     "-v",
     default=False,
@@ -49,7 +57,7 @@ logger = getLogger("console")
     help="Enable verbose mode to print out the logs",
     type=click.BOOL,
 )
-def cli(filepath: str, install: bool, verbose: bool):
+def cli(filepath: str, install: bool, dev: bool, verbose: bool):
     """ CLI Endpoint: To convert requirements file to pyproject.toml & poetry lock
 
     Args:
@@ -65,7 +73,9 @@ def cli(filepath: str, install: bool, verbose: bool):
 
     requirements = read_requirments(ctx, filepath)
 
-    command = ["poetry", "add"] if install else ["poetry", "add", "--lock"]
+    command = ["poetry", "add"]
+    command = command if install else command.append("--lock")
+    command = command.append("--dev") if dev else command
     command.extend(requirements)
 
     logger.debug(f"[DEBUG] Command list: {command}")
