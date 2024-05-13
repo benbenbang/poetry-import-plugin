@@ -1,4 +1,6 @@
-# Req2Toml
+# Poetry Import Plugin
+
+renamed from `Req2Toml`
 
 Adding the dependencies from `requirements.txt` to `pyproject.toml` and `poetry.lock` with one command 😉
 

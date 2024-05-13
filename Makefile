@@ -67,6 +67,7 @@ build: format build_pkg
 ## Install package in current env
 install: install_pkg clean
 
+## chain actions to run test and build package
 ci: test build_pkg
 
 .DEFAULT_GOAL := help

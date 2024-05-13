@@ -23,8 +23,8 @@ sys.setrecursionlimit(1500)
 
 # -- Project information -----------------------------------------------------
 
-project = "req2toml"
-copyright = "2020, Ben CHEN"
+project = "poetry-import-plugin"
+copyright = "2024, Ben CHEN"
 author = "Ben CHEN"
 
 # The full version, including alpha/beta/rc tags

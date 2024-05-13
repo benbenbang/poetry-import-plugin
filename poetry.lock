@@ -413,11 +413,8 @@ name = "docutils"
 version = "0.16"
 description = "Docutils -- Python Documentation Utilities"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-files = [
-    {file = "docutils-0.16-py2.py3-none-any.whl", hash = "sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af"},
-    {file = "docutils-0.16.tar.gz", hash = "sha256:c2de3a60e9e7d07be26b7f2b00ca0309c207e06c100f9cc2a94931fc75a478fc"},
-]
+python-versions = "*"
+files = []
 
 [[package]]
 name = "filelock"
@@ -1397,4 +1394,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "d0ed9d61ba5e89739501090786eeb6088978cf4d7ae2694625f5cbea684b5653"
+content-hash = "b6eb5dd1862d937643f730a0a2b2643be718b80b862b9693d507e22cf4c754fe"

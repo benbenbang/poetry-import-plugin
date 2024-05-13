@@ -29,7 +29,6 @@ build-backend = "poetry.core.masonry.api"
 
 
 class TestTomlPresent(CaseMixin, TempfileMixin, TestCase):
-
     # Unable to create or delete git repo at the test env
     # Abort but return 0 to pass the test
     RETURN_ON_GIT_INIT = RETURN_ON_GIT_DELETE = 0
@@ -80,7 +79,7 @@ class TestTomlNotPresent(CaseMixin, TempfileMixin, TestCase):
 
         ok = self._git_init()
         if not ok:
-            return self.RETURN_ON_GIT_INIT
+            return self.RETURN_ON_GIT_INIT  # type: ignore
 
         os.chdir("./tmp")
         self.assertFalse(toml_at_root())
@@ -88,6 +87,6 @@ class TestTomlNotPresent(CaseMixin, TempfileMixin, TestCase):
 
         ok = self._rm_git()
         if not ok:
-            return self.RETURN_ON_GIT_DELETE
+            return self.RETURN_ON_GIT_DELETE  # type: ignore
 
         self._delete_tempfile(self.toml_not_present_path)
