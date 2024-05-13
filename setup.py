@@ -7,9 +7,7 @@ from setuptools import find_packages, setup
 version = os.getenv("VERSION")
 
 if not version:
-    print(
-        "Please use `make build` to build the package. Or manually `export VERSION=xxx` and rerun"
-    )
+    print("Please use `make build` to build the package. Or manually `export VERSION=xxx` and rerun")
 
 requirements = [
     'click==7.1.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.5.0")'

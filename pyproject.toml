@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "poetry-import-plugin"
-version = "1.2.0"
+version = "1.2.2"
 description = "Convert requirements.txt to pyproject.toml"
 authors = ["Ben Chen <benbenbang@github.com>"]
 license = "Apache-2.0"
@@ -23,7 +23,7 @@ packages = [{ include = "req2toml" }]
 req2lock = 'req2toml.console:cli'
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.8"
 click = "7.1.2"
 
 [tool.poetry.dev-dependencies]

@@ -26,9 +26,7 @@ numpy==1.16; (python<=3.6)
 numpy>1.19.0; (python>3.6)
 pandas==0.25.2
         """
-        self.unformatted_content = (
-            """numpy==1.16\nnumpy>1.19.0\npandas==0.25.2; (numpy<=1.17)\nmatplotlib"""
-        )
+        self.unformatted_content = """numpy==1.16\nnumpy>1.19.0\npandas==0.25.2; (numpy<=1.17)\nmatplotlib"""
         self.messy_content = """numpy==1.16; (python<=3.6)
     numpy>1.19.0; (python>3.6)
         scikit-learn==0.17.1;\n\tjoblib=0.16
@@ -57,9 +55,7 @@ class TempfileMixin:
             try:
                 Path("./tmp").rmdir()
             except OSError:
-                print(
-                    "Unable to delete ./tmp folder due to none empty. Going to remove by rm -rf"
-                )
+                print("Unable to delete ./tmp folder due to none empty. Going to remove by rm -rf")
                 proc = Popen(["rm", "-rf", "./tmp"])
                 proc.communicate()
 
@@ -97,9 +93,7 @@ class TempfileMixin:
         try:
             os.chdir("./tmp")
             proc = Popen(["git", "init"], stdout=PIPE, stderr=PIPE)
-            result = next(
-                (r.decode for r in proc.communicate() if r), "Unable to create Git Repo"
-            )
+            result = next((r.decode for r in proc.communicate() if r), "Unable to create Git Repo")
             os.chdir("..")
             assert result != "Unable to create Git Repo"
             ok = True

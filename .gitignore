@@ -68,6 +68,11 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/source/*.rst
+!docs/source/index.rst
+*/docs/_build/
+*/docs/source/*.rst
+!*/docs/source/index.rst
 
 # PyBuilder
 target/
@@ -129,10 +134,12 @@ mlruns/
 .vscode
 .idea
 .anaconda
+pyrightconfig.json
 
 # Go Project
 vendor
 _vendor*
+.hc.yaml
 
 # Project Level 👇
-req2toml.xml
+# Remove the existed one or use anti pattern ! to allow some patterns if needed

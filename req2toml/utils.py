@@ -43,7 +43,7 @@ logger.setLevel(level="ERROR")
 
 
 def read_requirments(ctx: Context, req_path: Union[str, PathLike]) -> str:
-    """ Read Requirments.txt from the given path after passed several checkes
+    """Read Requirments.txt from the given path after passed several checkes
 
     Note
         1. Starting `if` is to check that the requirements.txt (or in your way of naming) exists at the given path
@@ -82,9 +82,7 @@ def read_requirments(ctx: Context, req_path: Union[str, PathLike]) -> str:
         )
         ctx.abort()
     elif path.suffix not in SUPPORT_TYPE:
-        click.secho(
-            f"FileNotSupportError: extension '{path.suffix}' is not a supported type"
-        )
+        click.secho(f"FileNotSupportError: extension '{path.suffix}' is not a supported type")
         ctx.abort()
 
     logger.debug(f"[DEBUG] Found requirements.txt and pyproject.toml!")
@@ -92,17 +90,11 @@ def read_requirments(ctx: Context, req_path: Union[str, PathLike]) -> str:
     with open(path, "r") as file:
         deps = file.readlines()
 
-    return [
-        "".join([d.strip() for d in dep])
-        for dep in [dep.strip().split() for dep in deps]
-        if dep
-    ]
+    return ["".join([d.strip() for d in dep]) for dep in [dep.strip().split() for dep in deps] if dep]
 
 
-def inpty(
-    ctx: Context, cmd: Union[str, List], env: Dict = None, log: ByteString = None
-):
-    """ inpty polls colorful stdout of poetry to the terminal
+def inpty(ctx: Context, cmd: Union[str, List], env: Dict = None, log: ByteString = None):
+    """inpty polls colorful stdout of poetry to the terminal
 
         This function executes command and use select + pty to pull process stdout and stderr to file-object 'log' in non-blocking way, so it can simultaneously logging to stdout and close by itself after the process is done.
 
@@ -162,7 +154,7 @@ def inpty(
 
 
 def toml_at_root() -> bool:
-    """ Get the root dir of a Git project and try to locate the pyproject.toml
+    """Get the root dir of a Git project and try to locate the pyproject.toml
 
     Returns:
         bool: True if pyproject.toml exists

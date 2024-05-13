@@ -59,7 +59,7 @@ logger = getLogger("console")
     type=click.BOOL,
 )
 def cli(filepath: str, install: bool, dev: bool, verbose: bool):
-    """ CLI Endpoint: To convert requirements file to pyproject.toml & poetry lock
+    """CLI Endpoint: To convert requirements file to pyproject.toml & poetry lock
 
     Args:
         filepath (str): Path to the requirments file

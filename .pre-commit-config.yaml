@@ -1,26 +1,44 @@
 default_language_version:
-    python: python3
+  python: python3
+
+default_stages: [commit]
 
 repos:
--   repo: https://github.com/timothycrosley/isort
+  - repo: https://github.com/timothycrosley/isort
     rev: 5.13.2
     hooks:
-    -   id: isort
+      - id: isort
         name: isort
--   repo: https://github.com/psf/black.git
+        files: ".*.py"
+        args:
+          - "--settings-path=.isort.cfg"
+  - repo: https://github.com/psf/black.git
     rev: 24.4.2
     hooks:
-    -   id: black
+      - id: black
         name: black
--   repo: https://github.com/pre-commit/pre-commit-hooks
+        args: [--line-length, "120", "."]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
-    -   id: check-yaml
-        args: ['--allow-multiple-documents']
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
-    -   id: check-added-large-files
-        args: ['--maxkb=1024']
-    -   id: requirements-txt-fixer
-    -   id: check-merge-conflict
-    -   id: debug-statements
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: requirements-txt-fixer
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: pretty-format-json
+        args:
+          - "--autofix"
+          - "--indent=2"
+  - repo: local
+    hooks:
+      - id: validate-commit-msg
+        name: Commit Message is Valid
+        language: pygrep
+        entry: ^(build|ci|docs|feat|fix|perf|refactor|style|test|ops|hotfix|release|chore)(\([\w,\.,\-,\(,\),\/]+\))?(!?)(:)\s{1}([\w,\W,:]+)$
+        stages: [commit-msg]
+        args: [--negate]
