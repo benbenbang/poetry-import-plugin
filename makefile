@@ -1,15 +1,5 @@
 .EXPORT_ALL_VARIABLES:
-PYTHON_INTERPRETER = $(shell which python)
-PY_CACHE_DIR = `find . -type d -name __pycache__`
-
-# Args
-pypi_apitoken =
-
-ifeq (,$(shell which poetry))
-HAS_POETRY=False
-else
-HAS_POETRY=True
-endif
+PY_CACHE_DIR = $(shell find . -type d -name __pycache__)
 
 define cleanPyCache
 @while read pyCD; \
@@ -21,54 +11,32 @@ done <<< $(PY_CACHE_DIR)
 endef
 
 .PHONY: build
-## Build
-build_pkg:
-	@echo "Start to build pkg"
-ifeq (True,$(HAS_POETRY))
-	@poetry version $(shell git describe --tags --abbrev=0); \
+## Build package
+build:
+	@echo "building package..."
+	@poetry version $(shell git describe --tags --abbrev=0)
 	poetry build
-else
-	@export VERSION=$(shell git describe --tags --abbrev=0); \
-	$(PYTHON_INTERPRETER) setup.py build; \
-	$(PYTHON_INTERPRETER) setup.py sdist
-endif
 
 .PHONY: format
-## Run pre-commit hook to do the formating
+## Run pre-commit hook to do the formatting
 format:
-ifeq (True,$(HAS_POETRY))
-	@-poetry run pre-commit install
-	@-poetry run pre-commit run --all
-else
-	@-pre-commit install
-	@-pre-commit run --all
-endif
+	@poetry run pre-commit install
+	@poetry run pre-commit run --all
 
 .PHONY: publish
-## Tag new version and upload to pypi
-upload:
-	@poetry config pypi-token.pypi $$pypi_apitoken; \
-	poetry version $(shell git describe --tags --abbrev=0); \
+## Tag new version, build package and upload it to pypi
+publish:
+	@poetry version $(shell git describe --tags --abbrev=0); \
+	rm -rf build; \
 	poetry publish --build
 
 .PHONY: clean
-## Remove build, dist and *.egg-info directories after build or installation
+## Remove build, dist, and *.egg-info directories after build or installation
 clean:
 	@-rm -r build
 	@-rm -r dist
 	@-rm -r oqim.egg-info
 	@-$(call cleanPyCache)
-
-.PHONY: build
-## Run build_pkg, format together
-build: format build_pkg
-
-.PHONY: install
-## Install package in current env
-install: install_pkg clean
-
-## chain actions to run test and build package
-ci: test build_pkg
 
 .DEFAULT_GOAL := help
 
