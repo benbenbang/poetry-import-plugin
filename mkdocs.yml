@@ -1,0 +1,9 @@
+site_name: poetry-import-plugin
+
+theme:
+  name: mkdocs
+  locale: en
+  custom_dir: docs/
+  static_templates:
+    - sitemap.html
+  include_sidebar: false
