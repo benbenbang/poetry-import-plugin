@@ -1,3 +1,8 @@
+<!-- ---
+hide:
+  - navigation
+---
+ -->
 # Poetry Import Plugin
 
 `poetry-import-plugin` is a Python plugin for Poetry that simplifies the process of importing dependencies from `requirements.txt` files into a Poetry project. It allows you to integrate dependencies into specified dependency groups within the project's `pyproject.toml` file, optionally applying constraints from a constraints file. This plugin also supports updating the Poetry lock file and installing dependencies.
@@ -34,6 +39,8 @@ pipx uninject poetry-import-plugin
 
 #### With `pip`
 
+Install from [PyPI](https://pypi.org/project/poetry-import-plugin/)
+
 ```bash
 # To install
 $POETRY_HOME/bin/pip install --no-cache-dir poetry-import-plugin
@@ -44,7 +51,7 @@ $POETRY_HOME/bin/pip uninstall poetry-import-plugin
 
 
 
-#### The `self add` command (not recommended for Windows users)
+#### The `self add` command (⚠️ not recommended for Windows users)
 
 ```bash
 # To install
@@ -73,36 +80,38 @@ The `import` command can be used to import dependencies from `requirements.txt` 
 - `--install` (optional): Runs a Poetry installation to install all dependencies defined in `pyproject.toml`.
 
 ### Examples
-
+<br>
 1. Import dependencies from `requirements.txt` into the default group:
 
-   ```bash
-   poetry import requirements.txt
-   ```
-
+```bash
+poetry import requirements.txt
+```
+<br>
 2. Import dependencies from multiple `requirements.txt` files into specific groups:
 
-   ```bash
-   poetry import -g dev dev-requirements.txt -g test test-requirements.txt
-   ```
-
+```bash
+poetry import -g dev dev-requirements.txt -g test test-requirements.txt
+```
+<br>
 3. Apply constraints from a constraints file during import:
 
-   ```bash
-   poetry import -c constraints.txt requirements.txt
-   ```
+```bash
+poetry import -c constraints.txt requirements.txt
+```
 
+<br>
 4. Update the Poetry lock file after importing dependencies:
 
-   ```bash
-   poetry import --lock requirements.txt
-   ```
+```bash
+poetry import --lock requirements.txt
+```
 
+<br>
 5. Install all dependencies after importing:
 
-   ```bash
-   poetry import --install requirements.txt
-   ```
+```bash
+poetry import --install requirements.txt
+```
 
 
 

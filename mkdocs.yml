@@ -1,9 +1,60 @@
 site_name: poetry-import-plugin
 
+extra_css:
+  - extra.css
+
 theme:
-  name: mkdocs
+  name: material
   locale: en
-  custom_dir: docs/
+  font:
+    text: JetBrainsMonoNLNerdFont
+    code: JetBrainsMonoNLNerdFont
+  custom_dir: docs/src
   static_templates:
-    - sitemap.html
+    - sitemap.xml
   include_sidebar: false
+  admonition:
+    note: octicons/tag-16
+    abstract: octicons/checklist-16
+    info: octicons/info-16
+    tip: octicons/squirrel-16
+    success: octicons/check-16
+    question: octicons/question-16
+    warning: octicons/alert-16
+    failure: octicons/x-circle-16
+    danger: octicons/zap-16
+    bug: octicons/bug-16
+    example: octicons/beaker-16
+    quote: octicons/quote-16
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: black
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  markdown_extensions:
+    - attr_list
+    - md_in_html
+    - admonition
+    - pymdownx.highlight
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.details
+nav:
+  -  Home: index.md
+  - 󰄠 PyPI: https://pypi.org/project/poetry-import-plugin
+  -  Repository: https://github.com/benbenbang/poetry-import-plugin
+
+repo_name: Poetry Import Plugin
+repo_url: https://github.com/benbenbang/poetry-import-plugin
