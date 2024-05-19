@@ -70,6 +70,10 @@ mkdocs-material = { version = "~9.5", python = ">=3.8" }
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pyright]
+reportImplicitStringConcatenation = false
+
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

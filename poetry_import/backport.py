@@ -20,9 +20,11 @@ import sys
 try:
     # pypi library
     from cleo.exceptions import CleoError as CleoException
+    from cleo.io.io import IO
 except ImportError:
     # pypi library
     from cleo.exceptions import CleoException  # type: ignore  # noqa
+    from cleo.io.io import IO
 
 
 __all__ = ["CleoException", "parse_dependency_specification"]
@@ -31,20 +33,15 @@ __all__ = ["CleoException", "parse_dependency_specification"]
 PYTHON_MIN_SUPPORT_MINOR_VERSION = 8  # i.e. 3.8
 
 
-def show_warning():
+def show_warning(io: "IO"):
     pyver = sys.version_info
 
     if pyver.minor < PYTHON_MIN_SUPPORT_MINOR_VERSION:
-        # standard library
-        from warnings import warn
-
-        warn(
-            f"The support of python verion < 3.{PYTHON_MIN_SUPPORT_MINOR_VERSION} is deprecated "
+        io.write_line(
+            f"<warning>The support of python verion < 3.{PYTHON_MIN_SUPPORT_MINOR_VERSION} is deprecated "
             "and will be removed in a future release. "
             "Please use higher python version instead. "
-            "For more details, please check https://devguide.python.org/versions ",
-            DeprecationWarning,
-            stacklevel=2,
+            "For more details, please check https://devguide.python.org/versions.<warning>",
         )
 
 
