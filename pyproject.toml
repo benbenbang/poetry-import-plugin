@@ -12,6 +12,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -23,7 +24,12 @@ packages = [{ include = "poetry_import" }]
 import = "poetry_import:ImportReqPlugin"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
+
+# https://devguide.python.org/versions/
+# end of life cycle:
+# - 3.7
+
 
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.2"
@@ -35,20 +41,30 @@ ipython = [
     { version = ">=8.23.0", python = ">=3.10" },
     { version = "<8.23.0", python = "<3.10" },
 ]
-ruff = "^0.4.2"
+ruff = "^0.4.4"
 
 [tool.poetry.group.tests.dependencies]
-pytest = "^8.2"
-pytest-mock = "^3.14.0"
-pytest-cov = { version = "^5.0.0", extras = ["toml"] }
+pytest = [
+    { version = "^8.2", python = ">=3.8" },
+    { version = "^7.4.4", python = "<3.8" }
+]
+pytest-mock = [
+    { version = "^3.14.0" , python = ">=3.8" },
+    { version = "^3.0.0" , python = "<3.8" }
+]
+pytest-cov = [
+    { version = "^5.0.0", extras = ["toml"], python = ">=3.8"  },
+    { version = "^4.0.0", extras = ["toml"], python = "<3.8"  }
+]
 
 [tool.poetry.group.docs.dependencies]
-mkdocs = "~1.6"
-mkdocs-material = "~9.5"
+mkdocs = { version = "~1.6", python = ">=3.8" }
+mkdocs-material = { version = "~9.5", python = ">=3.8" }
 
 # [tool.poetry.group.publish.dependencies]
 # twine = "^5.0.0"
 # Note: having issue with docutils, install it when we need it for now
+# Package docutils (0.21.post1) not found.
 
 [build-system]
 requires = ["poetry-core"]
