@@ -29,9 +29,13 @@ python = "^3.8"
 
 
 @pytest.fixture
-def pyproject_toml(pyproject_toml_raw, tmp_path: "TempPathFactory", mocker: "MockerFixture"):
+def pyproject_toml(pyproject_toml_raw, tmp_path: "TempPathFactory"):
     folder = Path(f"{tmp_path}")
     toml_path = folder / "pyproject.toml"
     toml_path.write_text(pyproject_toml_raw)
-    mocker.patch.dict("os.environ", PYPROJECT_CUSTOM_PATH=f"{toml_path}")
     return toml_path
+
+
+@pytest.fixture(autouse=True)
+def patch_workplace_path(pyproject_toml, mocker: "MockerFixture"):
+    mocker.patch.dict("os.environ", PYPROJECT_CUSTOM_PATH=f"{pyproject_toml}")

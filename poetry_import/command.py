@@ -86,7 +86,6 @@ class ImportReqCommand(Command):
             multiple=False,
         ),
     ]
-    no_versions: list[str]
 
     def handle(self):
         """Execute the command to import dependencies from files into specified groups.
@@ -307,6 +306,7 @@ class ImportReqCommand(Command):
         data = parse(pyproject_path.read_text())
 
         poetry_section = cast(dict[str, Any], data["tool"]["poetry"])  # type: ignore
+        no_versions: list[str] = []
 
         for group, dependencies in groups_specs.items():
             # Ensure that the specific group section exists
@@ -360,7 +360,7 @@ class ImportReqCommand(Command):
                     group_deps_table[name] = item(version)
                     continue
 
-                self.no_versions.append(name)
+                no_versions.append(name)
 
         # TO DO:
         # Need to think of a better way to formating (identation) before stringify
@@ -372,10 +372,12 @@ class ImportReqCommand(Command):
         #         continue
         #     val.trivia.indent = "\n"
 
-        if self.no_versions:
+        if no_versions:
             no_versions_str = " ".join(self.no_versions)
             self.line(
-                f"one or more package(s) doesn't include version, please run `poetry add {no_versions_str}` seperately",
+                "one or more package(s) doesn't include version, "
+                f"please run `poetry add {no_versions_str}` seperately. "
+                "Skipping them for import.",
                 style="warning",
             )
 
@@ -388,9 +390,6 @@ class ImportReqCommand(Command):
 
         Decides whether to run a Poetry update or install operation based on the options provided by the user.
         """
-        if len(self.no_versions) == 0:
-            return
-
         self.line("✨ Successfully import all the files!", style="success")
 
         if not (self.option("lock") or self.option("install")):
@@ -400,7 +399,8 @@ class ImportReqCommand(Command):
             )
             return
 
-        lock_flags: tuple[str] | tuple[str, str] = ("lock",)
+        lock_flags: tuple[str] | tuple[str, str]  # type: ignore
+        lock_flags = ("lock",)
         if self.option("no-update"):
             lock_flags = ("lock", "--no-update")
 
