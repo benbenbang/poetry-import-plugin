@@ -27,7 +27,7 @@ from cleo.helpers import argument, option
 from tomlkit import dumps, inline_table, item, parse, table
 
 # poetry-import library
-from poetry_import.backport import CleoException, parse_dependency_specification
+from poetry_import.backport import CleoException, parse_dependency_specification, show_warning
 
 
 class ImportReqCommand(Command):
@@ -98,6 +98,9 @@ class ImportReqCommand(Command):
         Raises:
             FileNotFoundError: If any specified files or the pyproject.toml file cannot be found.
         """
+        # check python version
+        show_warning(self._io)
+
         file_groups = self._fromat_tokens()
 
         constraints_path = file_groups.pop("constraints", [])
