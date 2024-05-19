@@ -5,12 +5,14 @@ from unittest.mock import MagicMock, mock_open, patch
 
 # pypi library
 import pytest
+from cleo.io.buffered_io import BufferedIO
 
 # poetry-import library
 from poetry_import.command import ImportReqCommand
 
 if TYPE_CHECKING:
     # pypi library
+    from _pytest._py.path import LocalPath
     from pytest_mock import MockerFixture
 
     # poetry-import library
@@ -25,7 +27,7 @@ def command():
 
 
 @pytest.mark.unittests
-def test_parse_group_specifications(command, project: "Project"):
+def test_parse_group_specifications(command: "ImportReqCommand", project: "Project"):
     # Test case 1: Simple case with one file going to the root group
     dependencies: dict[str, list[str]] = {"root": [f"{project['req_a']}"]}
     constraints: dict[str, str] = {}
@@ -63,32 +65,46 @@ def test_parse_group_specifications(command, project: "Project"):
 
 
 @pytest.mark.unittests
-def test_parse_requirements_file(command, mocker: "MockerFixture"):
-    mocker.patch("pathlib.Path.open", new_callable=mock_open, read_data="flask==1.0\nDjango==3.0")
-
-    dependencies = command._parse_requirements_file("requirements.txt")
-    assert dependencies == ["flask==1.0", "Django==3.0"], "Failed to parse requirements file correctly"
+def test_parse_requirements_file(command, project: "Project"):
+    result = command._parse_requirements_file([project["req_a"]], {})
+    assert result == [
+        {"name": "flask", "version": "1.0"},
+        {"name": "django", "version": "3.0"},
+    ], "Failed to parse requirements file correctly"
 
 
 @pytest.mark.unittests
-def test_update_or_install_dependencies(command):
-    # Setup the command options as if they were parsed from command line input
-    command.option = MagicMock(side_effect=lambda x: x == "update")
+def test_lock_or_install_dependencies(
+    mocker: "MockerFixture",
+    command: "ImportReqCommand",
+    project: "Project",
+    pyproject_toml: "LocalPath",
+):
+    mocker.patch.dict("os.environ", PYPROJECT_CUSTOM_PATH=f"{pyproject_toml}")
+    mocker.patch.object(command, "_io", BufferedIO())
+    mocker.patch.object(command, "_application", MagicMock())
 
-    with patch.object(command.poetry, "run") as mock_run:
-        command._update_or_install_dependencies()
-        mock_run.assert_called_once_with("update")  # Assert that poetry.run was called once with 'update'
+    # Setup the command options as if they were parsed from command line input
+    command.option = MagicMock(side_effect=lambda x: x == "lock")
+
+    dependencies: dict[str, list[str]] = {"root": [f"{project['req_a']}"]}
+    result = command._parse_group_specifications(dependencies, {})
+    command.update_pyproject_toml(result)
+
+    with patch.object(command, "call") as mock_run:
+        command.lock_or_install_dependencies()
+        mock_run.assert_called_with("lock")
 
     # Test with 'install' option
     command.option = MagicMock(side_effect=lambda x: x == "install")
-    with patch.object(command.poetry, "run") as mock_run:
-        command._update_or_install_dependencies()
-        mock_run.assert_called_once_with("install")  # Assert that poetry.run was called once with 'install'
+    with patch.object(command, "call") as mock_run:
+        command.lock_or_install_dependencies()
+        mock_run.assert_called_with("install")  # Assert that poetry.run was called once with 'install'
 
     # Test with no update/install (should not call poetry.run)
     command.option = MagicMock(return_value=False)
-    with patch.object(command.poetry, "run") as mock_run:
-        command._update_or_install_dependencies()
+    with patch.object(command, "call") as mock_run:
+        command.lock_or_install_dependencies()
         mock_run.assert_not_called()  # Assert that poetry.run was not called
 
 
@@ -113,7 +129,7 @@ Django = "3.0"
 
 
 @pytest.mark.unittests
-def test_apply_constraints(command):
+def test_apply_constraints(command: "ImportReqCommand"):
     dependencies = ["flask", "Django"]
     constraints = {"flask": "==1.1"}
     expected = ["flask==1.1", "Django"]
@@ -122,7 +138,7 @@ def test_apply_constraints(command):
 
 
 @pytest.mark.unittests
-def test_command_full_flow(command, mocker: "MockerFixture"):
+def test_command_full_flow(command: "ImportReqCommand", mocker: "MockerFixture"):
     mocker.patch("pathlib.Path.open", new_callable=mock_open, read_data="flask==1.0\nDjango==3.0")
 
     # Setup command options and arguments
