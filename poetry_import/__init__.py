@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from poetry.plugins.application_plugin import ApplicationPlugin
 
 # poetry-import library
+from poetry_import.backport import show_warning
 from poetry_import.command import ImportReqCommand
 
 if TYPE_CHECKING:
@@ -29,9 +30,13 @@ if TYPE_CHECKING:
 
 
 class ImportReqPlugin(ApplicationPlugin):
+    name = "import"
+    description = "Import the requirements files to pyproject.toml"
+
     @property
     def commands(self):
+        show_warning()
         return [ImportReqCommand]
 
     def activate(self, application: "Application") -> None:
-        super().activate(application=application)
+        application.command_loader.register_factory("import", ImportReqCommand)
