@@ -175,7 +175,7 @@ exclude_also = [
     "if 0:",
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
-    "class .*\bProtocol):",
+    "class .*\\bProtocol\\):",
     "@(abc.)?abstractmethod",
     '\.\.\.',
 ]

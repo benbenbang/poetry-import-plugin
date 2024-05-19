@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     # pypi library
     from pytest_mock import MockerFixture
 
+    # poetry-import library
+    from tests.fixtures.tmp_project import Project
+
 
 @pytest.fixture
 def command():
@@ -22,30 +25,41 @@ def command():
 
 
 @pytest.mark.unittests
-def test_parse_group_specifications(command):
+def test_parse_group_specifications(command, project: "Project"):
     # Test case 1: Simple case with one file going to the root group
-    group_specs = ["a.txt"]
-    files = ["a.txt"]
-    expected_file_group_map = {"root": ["a.txt"]}
-    expected_constraints_file = None
-    result, constraints_file = command._parse_group_specifications(group_specs, files)
-    assert result == expected_file_group_map and constraints_file == expected_constraints_file, "Test Case 1 Failed"
+    dependencies: dict[str, list[str]] = {"root": [f"{project['req_a']}"]}
+    constraints: dict[str, str] = {}
+
+    expect_reqs = {"root": [{"version": "1.0", "name": "flask"}, {"version": "3.0", "name": "django"}]}
+
+    result = command._parse_group_specifications(dependencies, constraints)
+
+    assert result == expect_reqs, "Test Case 1 Failed"
 
     # Test case 2: Handling constraints file
-    group_specs = ["-c", "constraints.txt", "a.txt", "-g", "dev", "ipython", "ruff", "-g", "tests", "b.txt"]
-    files = ["a.txt", "b.txt"]
-    expected_file_group_map = {"root": ["a.txt"], "dev": ["ipython", "ruff"], "tests": ["b.txt"]}
-    expected_constraints_file = "constraints.txt"
-    result, constraints_file = command._parse_group_specifications(group_specs, files)
-    assert result == expected_file_group_map and constraints_file == expected_constraints_file, "Test Case 2 Failed"
+    dependencies = {
+        "root": [f"{project['req_a']}"],
+        "dev": [f"{project['dev']}"],
+        "data_quality": [f"{project['req_b']}"],
+    }
+    constraints = {
+        "flask": "2.0",
+        "django": "3.0",
+        "pydantic-settings": "2.3",
+    }
 
-    # Test case 3: Complex case with mixed file and direct dependency listings
-    group_specs = ["a.txt", "-g", "dev", "ipython", "ruff", "-g", "tests", "b.txt"]
-    files = ["a.txt", "b.txt"]
-    expected_file_group_map = {"root": ["a.txt"], "dev": ["ipython", "ruff"], "tests": ["b.txt"]}
-    expected_constraints_file = None
-    result, constraints_file = command._parse_group_specifications(group_specs, files)
-    assert result == expected_file_group_map and constraints_file == expected_constraints_file, "Test Case 3 Failed"
+    expect_reqs = {
+        "root": [{"version": "2.0", "name": "flask"}, {"version": "3.0", "name": "django"}],
+        "data_quality": [
+            {"version": "2.0", "name": "pydantic"},
+            {"version": "2.3", "name": "pydantic-settings"},
+        ],
+        "dev": [{"name": "ipython"}, {"name": "ruff"}],
+    }
+
+    result = command._parse_group_specifications(dependencies, constraints)
+
+    assert result == expect_reqs, "Test Case 2 Failed"
 
 
 @pytest.mark.unittests
