@@ -33,7 +33,7 @@ jobs:
         run: |
           # install deps
           npm install -g @commitlint/config-conventional
-          npm i conventional-changelog-conventionalcommits
+          npm i conventional-changelog-conventionalcommits@7.0.2
 
           # for logging
           next_tag=$(npx semantic-release --dry-run | grep -Poi "The next release version is \K\d+.\d+.\d+")
