@@ -92,6 +92,7 @@ celerybeat-schedule
 # Environments
 .env
 .venv
+.env*
 env/
 venv/
 ENV/
@@ -142,5 +143,4 @@ _vendor*
 .hc.yaml
 
 # Project Level 👇
-req2toml.xml
 file*.txt

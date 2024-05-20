@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # standard library
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -30,8 +32,8 @@ def command():
 @pytest.mark.unittests
 def test_parse_group_specifications(command: "ImportReqCommand", project: "Project"):
     # Test case 1: Simple case with one file going to the root group
-    dependencies: dict[str, list[str]] = {"root": [f"{project['req_a']}"]}
-    constraints: dict[str, str] = {}
+    dependencies: "dict[str, list[str]]" = {"root": [f"{project['req_a']}"]}
+    constraints: "dict[str, str]" = {}
 
     expect_reqs = {"root": [{"version": "1.0", "name": "flask"}, {"version": "3.0", "name": "django"}]}
 
@@ -88,7 +90,7 @@ def test_lock_or_install_dependencies(
     # Setup the command options as if they were parsed from command line input
     command.option = MagicMock(side_effect=lambda x: x == "lock")
 
-    dependencies: dict[str, list[str]] = {"root": [f"{project['req_a']}"]}
+    dependencies: "dict[str, list[str]]" = {"root": [f"{project['req_a']}"]}
     result = command._parse_group_specifications(dependencies, {})
     command.update_pyproject_toml(result)
 

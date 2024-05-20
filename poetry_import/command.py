@@ -109,18 +109,18 @@ class ImportReqCommand(Command):
 
         self.lock_or_install_dependencies()
 
-    def _fromat_tokens(self) -> dict[str, list[str]]:
+    def _fromat_tokens(self) -> "dict[str, list[str]]":
         """Parses command line tokens to organize files into specified groups.
 
         Returns:
-            dict: A dictionary mapping group names to lists of file paths.
+            dict[str, list[str]]: A dictionary mapping group names to lists of file paths.
 
         Raises:
             CleoException: Raised if an error occurs in parsing the command tokens.
         """
         # Skip 'import' and process the rest
         tokens = self.io.input._tokens[1:]  # type: ignore
-        groups: dict[str, list[str]] = {}
+        groups: "dict[str, list[str]]" = {}
         current_group = "root"
         i = 0
         constraint_flag_found = False
@@ -187,7 +187,7 @@ class ImportReqCommand(Command):
         except Exception:
             return False
 
-    def is_empty(self, dep: dict[str, str]) -> bool:
+    def is_empty(self, dep: "dict[str, str]") -> bool:
         """
         Determine if a dependency dictionary is empty or contains only whitespace.
 
@@ -209,9 +209,9 @@ class ImportReqCommand(Command):
 
     def _parse_group_specifications(
         self,
-        groups: dict[str, list[str]],
-        constraints: dict[str, str],
-    ) -> dict[str, list[dict[str, str]]]:
+        groups: "dict[str, list[str]]",
+        constraints: "dict[str, str]",
+    ) -> "dict[str, list[dict[str, str]]]":
         """Parse group specifications and organize dependencies accordingly.
 
         Args:
@@ -221,14 +221,18 @@ class ImportReqCommand(Command):
         Returns:
             dict[str, list[dict[str, str]]]: A dictionary mapping group names to lists of dependency dictionaries.
         """
-        dependencies: dict[str, list[dict[str, str]]] = {}
+        dependencies: "dict[str, list[dict[str, str]]]" = {}
 
         for gp, files in groups.items():
             dependencies[gp] = self._parse_requirements_file(files, constraints)
 
         return dependencies
 
-    def _parse_requirements_file(self, file_paths: list[str], constraints: dict[str, str]) -> list[dict[str, str]]:
+    def _parse_requirements_file(
+        self,
+        file_paths: "list[str]",
+        constraints: "dict[str, str]",
+    ) -> "list[dict[str, str]]":
         """Parse dependencies from requirements.txt files and apply constraints.
 
         Args:
@@ -239,7 +243,7 @@ class ImportReqCommand(Command):
             list[dict[str, str]]: A list of dependency dictionaries.
         """
 
-        depends: list[dict[str, str]] = []
+        depends: "list[dict[str, str]]" = []
 
         for file_path in file_paths:
             fp = Path(file_path)
@@ -252,7 +256,7 @@ class ImportReqCommand(Command):
                     if line.strip() and not line.strip()[0].isalpha():
                         continue
 
-                    deps = cast(dict[str, str], parse_dependency_specification(line))
+                    deps = cast("dict[str, str]", parse_dependency_specification(line))
 
                     if self.is_empty(deps):
                         continue
@@ -266,7 +270,7 @@ class ImportReqCommand(Command):
 
         return depends
 
-    def _parse_constraints_specifications(self, file_path: list[str]) -> dict[str, str]:
+    def _parse_constraints_specifications(self, file_path: "list[str]") -> "dict[str, str]":
         """Parses a constraints file and returns a dictionary of package constraints.
 
         Args:
@@ -278,7 +282,7 @@ class ImportReqCommand(Command):
         if not file_path:
             return {}
 
-        constraints: dict[str, str] = {}
+        constraints: "dict[str, str]" = {}
         fp = Path(file_path[0])
 
         if not fp.is_file():
@@ -288,12 +292,12 @@ class ImportReqCommand(Command):
             for line in file:
                 if line.strip() and not line.strip()[0].isalpha():
                     continue
-                dep = cast(dict[str, str], parse_dependency_specification(line))
+                dep = cast("dict[str, str]", parse_dependency_specification(line))
                 constraints[dep["name"]] = dep["version"]
 
         return constraints
 
-    def update_pyproject_toml(self, groups_specs: dict[str, list[dict[str, str]]]):
+    def update_pyproject_toml(self, groups_specs: "dict[str, list[dict[str, str]]]"):
         """Update the pyproject.toml file with new dependency specifications.
 
         Args:
@@ -305,8 +309,8 @@ class ImportReqCommand(Command):
 
         data = parse(pyproject_path.read_text())
 
-        poetry_section = cast(dict[str, Any], data["tool"]["poetry"])  # type: ignore
-        no_versions: list[str] = []
+        poetry_section = cast("dict[str, Any]", data["tool"]["poetry"])  # type: ignore
+        no_versions: "list[str]" = []
 
         for group, dependencies in groups_specs.items():
             # Ensure that the specific group section exists
@@ -373,7 +377,7 @@ class ImportReqCommand(Command):
         #     val.trivia.indent = "\n"
 
         if no_versions:
-            no_versions_str = " ".join(self.no_versions)
+            no_versions_str = " ".join(no_versions)
             self.line(
                 "one or more package(s) doesn't include version, "
                 f"please run `poetry add {no_versions_str}` seperately. "
