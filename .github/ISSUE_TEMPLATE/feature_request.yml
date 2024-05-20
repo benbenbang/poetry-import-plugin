@@ -5,7 +5,7 @@ labels: [feature_request]
 body:
   - type: markdown
     attributes:
-      value: Thank you for considering a feature request for poetry-import-plugin! Your insights help improve the typing experience for the Kafka client. ✊
+      value: Thank you for considering a feature request for poetry-import-plugin! Your insights help improve the typing experience for the plugin. ✊
 
   - type: checkboxes
     id: searched

@@ -47,7 +47,7 @@ jobs:
 
       - name: update title  && upload distribution to GitHub Release
         run: |
-          gh release edit "${TAG_NAME}" --title "Types Confluent Kafka ${TAG_NAME}"
+          gh release edit "${TAG_NAME}" --title "Poetry Import Plugin ${TAG_NAME}"
           gh release upload ${TAG_NAME} dist/*
         env:
           GH_TOKEN: ${{ secrets.PTAH_CI_TOKEN }}
