@@ -1,5 +1,8 @@
 # Poetry Import Plugin
 
+ [![PyPI version](https://badge.fury.io/py/poetry-import-plugin.svg)](https://badge.fury.io/py/poetry-import-plugin) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/poetry-import-plugin) [![GitHub issues](https://img.shields.io/github/issues/benbenbang/poetry-import-plugin)](https://github.com/benbenbang/poetry-import-plugin/issues) ![pre-commit enable](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white) [![main](https://github.com/benbenbang/poetry-import-plugin/actions/workflows/main.yml/badge.svg)](https://github.com/benbenbang/poetry-import-plugin/actions/workflows/main.yml) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://semver.org/)
+
+
 `poetry-import-plugin` is a Python plugin for Poetry that simplifies the process of importing dependencies from `requirements.txt` files into a Poetry project. It allows you to integrate dependencies into specified dependency groups within the project's `pyproject.toml` file, optionally applying constraints from a constraints file. This plugin also supports updating the Poetry lock file and installing dependencies.
 
 ps. It is renamed from `Req2Toml`
