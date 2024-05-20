@@ -1,20 +1,31 @@
+from __future__ import annotations
+
 # standard library
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
 # pypi library
 import pytest
 
+try:
+    # standard library
+    from typing import TypedDict
+
+    class Project(TypedDict):
+        req_a: "LocalPath"
+        req_b: "LocalPath"
+        constraints: "LocalPath"
+        dev: "LocalPath"
+        path: "LocalPath"
+
+except ImportError:
+    # standard library
+
+    Project = "dict[str, Any]"  # type: ignore
+
+
 if TYPE_CHECKING:
     # pypi library
     from _pytest._py.path import LocalPath
-
-
-class Project(TypedDict):
-    req_a: "LocalPath"
-    req_b: "LocalPath"
-    constraints: "LocalPath"
-    dev: "LocalPath"
-    path: "LocalPath"
 
 
 @pytest.fixture

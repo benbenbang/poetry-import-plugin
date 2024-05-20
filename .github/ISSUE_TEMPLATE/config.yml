@@ -1,0 +1,6 @@
+---
+blank_issues_enabled: false
+contact_links:
+  - name: 🤔 Ask a Question
+    url: "https://github.com/benbenbang/poetry-import-plugin/discussions/new/choose"
+    about: "Ask a question about how to use poetry-import-plugin or any other topics that don't fit into issues."
