@@ -27,10 +27,10 @@ Currently (as of 2024), poetry provides three ways to install the plugin:
 
 ```bash
 # To install
-pipx inject poetry-import-plugin
+pipx inject poetry poetry-import-plugin
 
 # To uninstall
-pipx uninject poetry-import-plugin
+pipx uninject poetry poetry-import-plugin
 ```
 
 
@@ -54,7 +54,7 @@ $POETRY_HOME/bin/pip uninstall poetry-import-plugin
 poetry self add poetry-import-plugin
 
 # To uninstall
-poetry self remove poetry-plugin
+poetry self remove poetry-import-plugin
 ```
 
 
