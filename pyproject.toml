@@ -5,7 +5,7 @@ description = "Convert requirements.txt to pyproject.toml"
 authors = ["Ben Chen <benbenbang@github.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-repository = "https://github.com/benbenbang/poetry-import"
+repository = "https://github.com/benbenbang/poetry-import-plugin"
 keywords = ["poetry", "pyproject", "toml", "requirements", "import"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
