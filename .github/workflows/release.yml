@@ -32,7 +32,12 @@ jobs:
       - name: semantic release
         run: |
           # install deps
-          npm install -g @commitlint/config-conventional
+          # downgrade
+          npm install semantic-release@23.1.1
+
+          # install compatible version
+          npm install @semantic-release/release-notes-generator@14.0.0
+          npm install -g @commitlint/config-conventional@19.2.2
           npm i conventional-changelog-conventionalcommits@7.0.2
 
           # for logging
