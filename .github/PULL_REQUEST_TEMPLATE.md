@@ -1,5 +1,3 @@
-- For introducing new signatures, please use `feat`
-
 ### **Description:**
 
 Please provide a brief description of the changes made in this pull request.

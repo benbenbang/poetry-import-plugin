@@ -144,3 +144,5 @@ _vendor*
 
 # Project Level 👇
 file*.txt
+node_modules
+node_modules/*
