@@ -1,0 +1,32 @@
+name: ⚒️ Poetry-Req-Import Feature Request
+description: "Suggest a new feature or enhancement for Poetry-Req-Import typings"
+labels: [feature_request]
+
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for considering a feature request for poetry-import-plugin! Your insights help improve the typing experience for the plugin. ✊
+
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Preliminary Checks
+      description: |
+        Before suggesting a new feature or enhancement for typings, ensure it's related to type annotations or type-related functionalities.
+      options:
+        - label: I've searched Google & GitHub for similar requests and found none.
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Details
+      description: |
+        Provide a comprehensive description of the feature or enhancement you're suggesting. 🙏
+
+        Consider including:
+        * An example showcasing how code might appear when leveraging the new typings.
+        * Specific use cases that would benefit from this typing feature or enhancement.
+        * Justification for adding this to the Poetry-Req-Import package
+    validations:
+      required: true
