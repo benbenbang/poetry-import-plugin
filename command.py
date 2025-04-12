@@ -112,10 +112,12 @@ class ImportReqCommand(Command):
         Raises:
             FileNotFoundError: If any specified files or the pyproject.toml file cannot be found.
         """
-        # check python version
         try:
+            # check python version
             show_warning(self._io)
+
             file_groups = self._fromat_tokens()
+
             constraints_path = file_groups.pop("constraints", [])
             constraints = self._parse_constraints_specifications(constraints_path)
             groups_specs = self._parse_group_specifications(file_groups, constraints)
@@ -271,34 +273,13 @@ class ImportReqCommand(Command):
 
             with fp.open() as f:
                 for line in f.readlines():
-                    line_stripped = line.strip()
-                    if not line_stripped or not line_stripped[0].isalpha():
+                    if line.strip() and not line.strip()[0].isalpha():
                         continue
-
-                    # First preserve the original format for version specifiers
-                    original_version = None
-                    # standard library
-                    import re
-
-                    # Handle ~= compatibility operator
-                    if "~=" in line_stripped:
-                        match = re.match(r"([a-zA-Z0-9_.-]+)\s*~=\s*([a-zA-Z0-9_.-]+)", line_stripped)
-                        if match:
-                            original_version = f"~={match.group(2)}"
-                    # Handle == exact version
-                    elif "==" in line_stripped:
-                        match = re.match(r"([a-zA-Z0-9_.-]+)\s*==\s*([a-zA-Z0-9_.-]+)", line_stripped)
-                        if match:
-                            original_version = f"=={match.group(2)}"
 
                     deps = cast("dict[str, str]", parse_dependency_specification(line))
 
                     if self.is_empty(deps):
                         continue
-
-                    # Keep the original version format if we detected a special format
-                    if original_version and "name" in deps:
-                        deps["version"] = original_version
 
                     if constraints.get(deps.get("name", "")):
                         if deps.get("url"):
@@ -370,7 +351,7 @@ class ImportReqCommand(Command):
 
         # If the file was originally v1 format but we're using v2 format,
         # add a message about the conversion
-        if poetry_version == PoetryVersion.V2 and "project" in data and "dependencies" not in data["project"]:
+        if "dependencies" not in data["project"] and poetry_version == PoetryVersion.V2:  # type:ignore
             self.line(
                 "Converting from Poetry v1 to v2 format. The tool.poetry section will be kept for compatibility.",
                 style="info",
@@ -440,14 +421,7 @@ class ImportReqCommand(Command):
         # Handle root dependencies
         if "root" in groups_specs:
             if "dependencies" not in project_section:
-                # pypi library
-                from tomlkit.items import Array
-
-                dependencies_array = Array(multiline=True)  # type: ignore
-                project_section["dependencies"] = dependencies_array
-            else:
-                # If dependencies already exist, ensure it's multiline
-                project_section["dependencies"].multiline(True)
+                project_section["dependencies"] = []
 
             # Project dependencies are stored as an array of strings in v2
             root_deps = groups_specs.get("root", [])
@@ -483,22 +457,9 @@ class ImportReqCommand(Command):
             dependencies: List of dependency specifications
             no_versions: List to collect package names without versions
         """
-        # Get existing package names
-        existing_packages = set()
-        for key in deps_table:
-            # Normalize package name
-            normalized_key = key.lower().replace("-", "_").replace(".", "_")
-            existing_packages.add(normalized_key)
-
         for dependency in dependencies:
             name = dependency.get("name")
             if not name:
-                continue
-
-            # Normalize the current package name for comparison
-            normalized_name = name.lower().replace("-", "_").replace(".", "_")
-            # Skip if already in dependencies
-            if normalized_name in existing_packages:
                 continue
 
             version = dependency.get("version")
@@ -547,29 +508,9 @@ class ImportReqCommand(Command):
             dependencies: List of dependency specifications
             no_versions: List to collect package names without versions
         """
-        # Get existing package names to avoid duplicates
-        existing_packages = set()
-        # standard library
-        import re
-
-        for entry in deps_array:
-            # Extract package name from "package (version)" format
-            match = re.match(r'"?([a-zA-Z0-9_.-]+)["\s].*', str(entry))
-            if match:
-                # Normalize package name by converting to lowercase and replacing separators
-                pkg_name = match.group(1).lower()
-                pkg_name = pkg_name.replace("-", "_").replace(".", "_")
-                existing_packages.add(pkg_name)
-
         for dependency in dependencies:
             name = dependency.get("name")
             if not name:
-                continue
-
-            # Normalize the current package name for comparison
-            normalized_name = name.lower().replace("-", "_").replace(".", "_")
-            # Skip if this package is already in the dependencies
-            if normalized_name in existing_packages:
                 continue
 
             version = dependency.get("version")
@@ -585,16 +526,14 @@ class ImportReqCommand(Command):
 
             # Simple version constraint
             if not (extras or markers or url or git):
-                processed_version = self._process_version(version)
-                deps_array.append(f"{name} ({processed_version})")
+                deps_array.append(f"{name} (>={version})")
                 continue
 
             # Complex dependency with extras
             if extras:
                 extras_str = f"[{extras}]"
                 if version:
-                    processed_version = self._process_version(version)
-                    deps_array.append(f"{name}{extras_str} ({processed_version})")
+                    deps_array.append(f"{name}{extras_str} (>={version})")
                 else:
                     deps_array.append(f"{name}{extras_str}")
                 continue
@@ -603,35 +542,17 @@ class ImportReqCommand(Command):
             # Convert to inline table format for more complex dependencies
             dep_str = name
             if version:
-                processed_version = self._process_version(version)
-                dep_str += f" ({processed_version})"
+                if "==" in version:
+                    # Convert exact version to PoetryV2 format
+                    ver = version.replace("==", "")
+                    dep_str += f" (=={ver})"
+                else:
+                    dep_str += f" ({version})"
 
             if markers:
                 dep_str += f"; {markers}"
 
             deps_array.append(dep_str)
-
-    def _process_version(self, version):
-        """Process a version string to avoid double operators."""
-        if (
-            version.startswith(">")
-            or version.startswith("<")
-            or version.startswith("=")
-            or version.startswith("^")
-            or version.startswith("~")
-        ):
-            # Version already has constraint operators, use as-is
-            return version
-        elif "==" in version:
-            # Convert exact version to PoetryV2 format without double operators
-            ver = version.replace("==", "")
-            return f"=={ver}"
-        elif "~=" in version:
-            # Preserve compatible release operator
-            return version
-        else:
-            # Add >= operator if no constraint is present
-            return f">={version}"
 
     def lock_or_install_dependencies(self):
         """

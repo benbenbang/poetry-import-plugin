@@ -25,7 +25,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     # pypi library
-    from _pytest._py.path import LocalPath
+    from _pytest._py.path import LocalPath  # type:ignore
 
 
 @pytest.fixture
