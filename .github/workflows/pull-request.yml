@@ -1,0 +1,94 @@
+name: pre-commit-hooks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-labeler:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: pr labeler
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
+  ruff-check:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ruff check
+        uses: astral-sh/ruff-action@v3
+        with:
+          src: >-
+            poetry_import/**/*.py
+
+  verify-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: prepare dependencies
+        run: |
+          python -m pip install --user pipx
+          python -m pipx ensurepath
+          pipx install pre-commit
+
+      - name: verify pr title
+        run: |
+          echo "PR title: ${{ github.event.pull_request.title }}"
+          git config --global user.name "github-actions"
+          git config --global user.email "otto@github-actions"
+
+          # install pre-commit hooks
+          pipx run pre-commit install && pipx run pre-commit install --hook-type commit-msg
+
+          # empty commit to trigger pre-commit
+          git commit --allow-empty -m "${{ github.event.pull_request.title }}"
+
+  run-pytests:
+    if: github.event.pull_request.draft == false
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        poetry-version: ["1.7.1", "1.8.5", "2.1.2"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: prepare poetry and dependencies
+        run: |
+          pipx install poetry=="${poetry_version}"
+          poetry install --without dev
+          poetry show
+        env:
+          poetry_version: ${{ matrix.poetry-version }}
+      - name: run tests
+        run: |
+          poetry run python -m pytest -k unittests --cov -vvvv
