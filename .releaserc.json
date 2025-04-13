@@ -44,6 +44,10 @@
           },
           {
             "release": "patch",
+            "type": "revert"
+          },
+          {
+            "release": "patch",
             "type": "fix"
           }
         ]

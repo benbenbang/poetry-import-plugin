@@ -1,0 +1,29 @@
+triage:
+  - changed-files:
+      - any-glob-to-any-file: "**/*"
+
+enhancement:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "commaond.py"
+          - "poetry_import/**/*"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**/*"
+
+workflows:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**/*"
+          - ".pre-commit-config.yaml"
+          - ".releaserc.json"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - README.md
+          - "**/*.md"
+          - "docs/**/*.md"
+          - "docs/mkdocs.yml"
