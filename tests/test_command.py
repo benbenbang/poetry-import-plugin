@@ -15,7 +15,7 @@ from poetry_import.command import ImportReqCommand
 
 if TYPE_CHECKING:
     # pypi library
-    from _pytest._py.path import LocalPath
+    from _pytest._py.path import LocalPath  # type: ignore
     from pytest_mock import MockerFixture
 
     # poetry-import library
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 @pytest.fixture
 def command():
     mock_command = ImportReqCommand()
-    mock_command._poetry = MagicMock()  # Mock the poetry instance
+    mock_command._poetry = MagicMock()  # type: ignore Mock the poetry instance
     return mock_command
 
 
@@ -35,7 +35,7 @@ def test_parse_group_specifications(command: "ImportReqCommand", project: "Proje
     dependencies: "dict[str, list[str]]" = {"root": [f"{project['req_a']}"]}
     constraints: "dict[str, str]" = {}
 
-    expect_reqs = {"root": [{"version": "1.0", "name": "flask"}, {"version": "3.0", "name": "django"}]}
+    expect_reqs = {"root": [{"version": "==1.0", "name": "flask"}, {"version": "==3.0", "name": "django"}]}
 
     result = command._parse_group_specifications(dependencies, constraints)
 
@@ -56,7 +56,7 @@ def test_parse_group_specifications(command: "ImportReqCommand", project: "Proje
     expect_reqs = {
         "root": [{"version": "2.0", "name": "flask"}, {"version": "3.0", "name": "django"}],
         "data_quality": [
-            {"version": "2.0", "name": "pydantic"},
+            {"version": "==2.0", "name": "pydantic"},
             {"version": "2.3", "name": "pydantic-settings"},
         ],
         "dev": [{"name": "ipython"}, {"name": "ruff"}],
@@ -71,8 +71,8 @@ def test_parse_group_specifications(command: "ImportReqCommand", project: "Proje
 def test_parse_requirements_file(command, project: "Project"):
     result = command._parse_requirements_file([project["req_a"]], {})
     assert result == [
-        {"name": "flask", "version": "1.0"},
-        {"name": "django", "version": "3.0"},
+        {"name": "flask", "version": "==1.0"},
+        {"name": "django", "version": "==3.0"},
     ], "Failed to parse requirements file correctly"
 
 
@@ -112,7 +112,7 @@ def test_lock_or_install_dependencies(
 
 
 @pytest.mark.unittests
-def test_update_pyproject_toml(command: "ImportReqCommand", pyproject_toml, pyproject_toml_raw):
+def test_update_pyproject_toml_v1(command: "ImportReqCommand", pyproject_toml, pyproject_toml_raw):
     mocked_file = Path(pyproject_toml)
     expect = (
         pyproject_toml_raw
@@ -130,10 +130,72 @@ Django = "3.0"
         ]
     }
 
+    # Mock the poetry-version option to explicitly use v1 format
+    command.option = lambda x: "v1" if x == "poetry-version" else None  # type: ignore
     command.update_pyproject_toml(group_specs)
 
     # Ensure the file was written to (updated)
     assert mocked_file.read_text() == expect
+
+
+@pytest.fixture
+def pyproject_toml_v2(tmp_path):
+    """Create a Poetry v2 format pyproject.toml for testing."""
+    toml_content = """[project]
+name = "poetry-import"
+version = "2.0.0"
+description = "Convert requirements.txt to pyproject.toml"
+authors = [
+    {name = "Ben Chen", email = "benbenbang@github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+"""
+    toml_path = tmp_path / "pyproject_v2.toml"
+    toml_path.write_text(toml_content)
+    return toml_path
+
+
+@pytest.mark.unittests
+def test_update_pyproject_toml_v2(command: "ImportReqCommand", pyproject_toml_v2, mocker):
+    mocked_file = Path(pyproject_toml_v2)
+
+    # Set custom path for this test
+    mocker.patch.dict("os.environ", PYPROJECT_CUSTOM_PATH=str(pyproject_toml_v2))
+
+    group_specs = {
+        "root": [
+            {"name": "flask", "version": "1.0"},
+            {"name": "Django", "version": "3.0"},
+        ],
+        "dev": [
+            {"name": "ipython", "version": "9.1.0"},
+            {"name": "ruff", "version": "0.4.4"},
+        ],
+    }
+
+    # Mock the poetry-version option to explicitly use v2 format
+    command.option = lambda x: "v2" if x == "poetry-version" else None  # type: ignore
+    command.line = lambda *args, **kwargs: None  # Mock line to avoid printing to console
+    command.update_pyproject_toml(group_specs)
+
+    # Read the updated file
+    updated_content = mocked_file.read_text()
+
+    # Verify root dependencies are in project.dependencies
+    assert "dependencies = [" in updated_content
+    assert "flask (>=1.0)" in updated_content
+    assert "Django (>=3.0)" in updated_content
+
+    # Verify group dependencies are in tool.poetry.group
+    assert "[tool.poetry.group.dev.dependencies]" in updated_content
+    assert 'ipython = "9.1.0"' in updated_content
+    assert 'ruff = "0.4.4"' in updated_content
 
 
 @pytest.mark.unittests
