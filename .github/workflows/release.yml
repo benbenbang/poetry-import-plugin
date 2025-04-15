@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: update github release
         run: |
-          gh release edit -R ${{ github.repository }} --title "⚙️ Poetry Import Plugin ${{ needs.semantic-release.outputs.new_release_tag }}"
+          gh release edit -R ${{ github.repository }} --title "⚙️ Poetry Import Plugin ${{ needs.semantic-release.outputs.new_release_tag }}" "${{ needs.semantic-release.outputs.new_release_tag }}"
         env:
           GH_TOKEN: ${{ github.token }}
 
