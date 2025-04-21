@@ -139,5 +139,5 @@ except ImportError:
                 name, version = line.split("==", 1)
                 return {"name": name.strip(), "version": version.strip()}
 
-            # Handle name format without version
-            return {"name": line.strip()}
+            # Handle name format without version - provide empty version string
+            return {"name": line.strip(), "version": ""}
