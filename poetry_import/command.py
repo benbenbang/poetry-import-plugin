@@ -18,12 +18,14 @@ from __future__ import annotations
 
 # standard library
 import os
+import re
 from pathlib import Path
 from typing import Any, cast
 
 # pypi library
 from cleo.commands.command import Command
 from cleo.helpers import argument, option
+from tomlkit import array as tomlkit_array
 from tomlkit import dumps, inline_table, item, parse, table
 
 # poetry-import library
@@ -113,17 +115,39 @@ class ImportReqCommand(Command):
             FileNotFoundError: If any specified files or the pyproject.toml file cannot be found.
         """
         # check python version
+        verbose = self.option("verbose")
+
         try:
             show_warning(self._io)
+            if verbose:
+                self.line("DEBUG: Starting handle method", style="debug")
+
             file_groups = self._fromat_tokens()
+            if verbose:
+                self.line(f"DEBUG: Parsed file groups: {file_groups}", style="debug")
+
             constraints_path = file_groups.pop("constraints", [])
             constraints = self._parse_constraints_specifications(constraints_path)
+            if verbose:
+                self.line(f"DEBUG: Parsed constraints: {constraints}", style="debug")
+
             groups_specs = self._parse_group_specifications(file_groups, constraints)
+            if verbose:
+                self.line(f"DEBUG: Parsed group specifications: {groups_specs}", style="debug")
+
             self.update_pyproject_toml(groups_specs)
+            if verbose:
+                self.line("DEBUG: Updated pyproject.toml", style="debug")
 
             self.lock_or_install_dependencies()
         except Exception as e:
             self.line(f"{e}", style="error")
+            # standard library
+            import traceback
+
+            if verbose:
+                self.line(f"DEBUG: Exception: {e}", style="debug")
+                self.line(f"DEBUG: {traceback.format_exc()}", style="debug")
             return 1
         return 0
 
@@ -136,57 +160,118 @@ class ImportReqCommand(Command):
         Raises:
             CleoException: Raised if an error occurs in parsing the command tokens.
         """
-        # Skip 'import' and process the rest
-        tokens = self.io.input._tokens[1:]  # type: ignore
+        verbose = self.option("verbose")
+
+        if verbose:
+            self.line("DEBUG: _fromat_tokens called", style="debug")
+
+        # Get command arguments (without the flags like -v)
+        arguments = self.argument("files")
+        if verbose:
+            self.line(f"DEBUG: arguments: {arguments}", style="debug")
+
         groups: "dict[str, list[str]]" = {}
         current_group = "root"
         i = 0
         constraint_flag_found = False
         files = 0
 
-        if not tokens:
+        # Process arguments instead of raw tokens
+        if not arguments:
+            if verbose:
+                self.line("DEBUG: No arguments found", style="debug")
             raise CleoException("At least one file or a group with files needs to be provided")
 
-        while i < len(tokens):
-            token = tokens[i]
+        # Clean up the arguments to handle the special case where 'import' is included in arguments
+        cleaned_args = []
+        for arg in arguments:
+            if arg != "import":  # Skip the command name if it's in the arguments
+                cleaned_args.append(arg)
 
-            if token == "-g":
-                if i + 1 >= len(tokens) or tokens[i + 1] == "-g" or tokens[i + 1] == "-c":
+        if verbose:
+            self.line(f"DEBUG: cleaned_args: {cleaned_args}", style="debug")
+
+        # If we have no cleaned args, check if this is just a case of using flags
+        if not cleaned_args:
+            if verbose:
+                self.line("DEBUG: No cleaned arguments, returning empty root group", style="debug")
+            groups["root"] = []
+            return groups
+
+        # Initialize default group
+        groups["root"] = []
+
+        # Process the arguments
+        i = 0
+        while i < len(cleaned_args):
+            arg = cleaned_args[i]
+
+            if arg == "-g":
+                if i + 1 >= len(cleaned_args) or cleaned_args[i + 1].startswith("-"):
                     raise CleoException("Missing or invalid group name after '-g'.")
                 i += 1  # Move to the group name
-                current_group = tokens[i]
+                current_group = cleaned_args[i]
                 if current_group in groups:
                     raise CleoException(f"Duplicate group name: {current_group}")
                 groups[current_group] = []
                 files += 1  # For tracing constraints file has something to "constraint"
-
-                i += 1  # Move cursor
+                i += 1
                 continue
-            if token == "-c":
+
+            if arg == "-c":
                 if constraint_flag_found:
                     raise CleoException("Multiple '-c' flags are not allowed.")
+                if i + 1 >= len(cleaned_args) or cleaned_args[i + 1].startswith("-"):
+                    raise CleoException("Missing filename after '-c'.")
                 i += 1  # Move to the filename
-                groups["constraints"] = [tokens[i]]
+                groups["constraints"] = [cleaned_args[i]]
                 constraint_flag_found = True
-
-                i += 1  # Move cursor
+                i += 1
                 continue
 
-            # for the rest of the flags, no need to process
-            if self.is_option(token):
-                i += 2
+            # Skip other flags and their values
+            if arg.startswith("-"):
+                if arg in ["-g", "-c"]:  # Already handled
+                    i += 1
+                    continue
+
+                # Handle other options
+                if self.is_flag_option(arg):
+                    i += 1  # Just skip the flag
+                else:
+                    i += 2  # Skip the flag and its value
                 continue
 
-            # This should be a file, add it to the current group
+            # This should be a file
             if current_group not in groups:
                 groups[current_group] = []
-            groups[current_group].append(token)
-
-            i += 1  # Move cursor
-            files += 1  # For tracing constraints file has something to "constraint"
+            groups[current_group].append(arg)
+            files += 1
+            i += 1
 
         if groups.get("constraints") and files == 0:
             raise CleoException("constraints file should pair with one or more requirements files")
+
+        # Add actual files if they exist
+        for file_arg in cleaned_args:
+            if (
+                not file_arg.startswith("-")
+                and file_arg not in groups.get("root", [])
+                and file_arg not in groups.get("constraints", [])
+            ):
+                # Check if it's in any other group
+                found = False
+                for group_name, files_list in groups.items():
+                    if file_arg in files_list:
+                        found = True
+                        break
+
+                # If not found in any group, add to root
+                if not found:
+                    groups.setdefault("root", []).append(file_arg)
+
+        if verbose:
+            self.line(f"DEBUG: final groups: {groups}", style="debug")
 
         return groups
 
@@ -200,8 +285,27 @@ class ImportReqCommand(Command):
             bool: True if the token is a recognized option, False otherwise.
         """
         try:
-            self.option(token.strip().strip("-"))
+            option_name = token.strip().strip("-")
+            self.option(option_name)
             return True
+        except Exception:
+            return False
+
+    def is_flag_option(self, token: str) -> bool:
+        """Check if a token is a flag option (doesn't require a value).
+
+        Args:
+            token (str): The token to check.
+
+        Returns:
+            bool: True if the token is a flag option, False otherwise.
+        """
+        try:
+            option_name = token.strip().strip("-")
+            option_obj = next(
+                (opt for opt in self.options if opt.name == option_name or opt.shortcut == option_name), None
+            )
+            return option_obj is not None and option_obj.flag  # type: ignore
         except Exception:
             return False
 
@@ -277,8 +381,6 @@ class ImportReqCommand(Command):
 
                     # First preserve the original format for version specifiers
                     original_version = None
-                    # standard library
-                    import re
 
                     # Handle ~= compatibility operator
                     if "~=" in line_stripped:
@@ -342,7 +444,15 @@ class ImportReqCommand(Command):
         Args:
             groups_specs (dict[str, list[dict[str, str]]]): A dictionary mapping group names to lists of dependencies.
         """
+        verbose = self.option("verbose")
+
+        if verbose:
+            self.line(f"DEBUG: update_pyproject_toml called with: {groups_specs}", style="debug")
+
         pyproject_path = Path(os.getenv("PYPROJECT_CUSTOM_PATH", "pyproject.toml"))
+        if verbose:
+            self.line(f"DEBUG: pyproject_path: {pyproject_path}, exists: {pyproject_path.is_file()}", style="debug")
+
         if not pyproject_path.is_file():
             raise FileNotFoundError("pyproject.toml not found")
 
@@ -350,6 +460,7 @@ class ImportReqCommand(Command):
 
         # Detect or use specified Poetry version
         poetry_version = detect_poetry_version(data, self.option("poetry-version"))
+
         no_versions: "list[str]" = []
 
         if poetry_version == PoetryVersion.V1:
@@ -370,7 +481,7 @@ class ImportReqCommand(Command):
 
         # If the file was originally v1 format but we're using v2 format,
         # add a message about the conversion
-        if poetry_version == PoetryVersion.V2 and "project" in data and "dependencies" not in data["project"]:
+        if poetry_version == PoetryVersion.V2 and "project" in data and data["project"].get("dependencies", "") == "":  # type: ignore
             self.line(
                 "Converting from Poetry v1 to v2 format. The tool.poetry section will be kept for compatibility.",
                 style="info",
@@ -440,13 +551,9 @@ class ImportReqCommand(Command):
         # Handle root dependencies
         if "root" in groups_specs:
             if "dependencies" not in project_section:
-                # pypi library
-                from tomlkit.items import Array
-
-                dependencies_array = Array(multiline=True)  # type: ignore
-                project_section["dependencies"] = dependencies_array
-            else:
-                # If dependencies already exist, ensure it's multiline
+                # Create a new array for dependencies
+                project_section["dependencies"] = tomlkit_array()
+                # Make it multiline for better readability
                 project_section["dependencies"].multiline(True)
 
             # Project dependencies are stored as an array of strings in v2
@@ -552,7 +659,21 @@ class ImportReqCommand(Command):
         # standard library
         import re
 
-        for entry in deps_array:
+        # pypi library
+        # First convert deps_array to a list if it's not already
+        from tomlkit.items import Array
+
+        if isinstance(deps_array, Array):
+            # Create a new list from the Array
+            existing_deps = list(deps_array)
+            # Clear the existing Array
+            while len(deps_array) > 0:
+                deps_array.pop()
+        else:
+            # This is already a list
+            existing_deps = deps_array
+
+        for entry in existing_deps:
             # Extract package name from "package (version)" format
             match = re.match(r'"?([a-zA-Z0-9_.-]+)["\s].*', str(entry))
             if match:
@@ -560,6 +681,8 @@ class ImportReqCommand(Command):
                 pkg_name = match.group(1).lower()
                 pkg_name = pkg_name.replace("-", "_").replace(".", "_")
                 existing_packages.add(pkg_name)
+                # Add back to the deps_array
+                deps_array.append(entry)
 
         for dependency in dependencies:
             name = dependency.get("name")
@@ -568,6 +691,7 @@ class ImportReqCommand(Command):
 
             # Normalize the current package name for comparison
             normalized_name = name.lower().replace("-", "_").replace(".", "_")
+
             # Skip if this package is already in the dependencies
             if normalized_name in existing_packages:
                 continue
@@ -591,7 +715,7 @@ class ImportReqCommand(Command):
 
             # Complex dependency with extras
             if extras:
-                extras_str = f"[{extras}]"
+                extras_str = "[" + ",".join(extras) + "]"
                 if version:
                     processed_version = self._process_version(version)
                     deps_array.append(f"{name}{extras_str} ({processed_version})")
@@ -600,7 +724,6 @@ class ImportReqCommand(Command):
                 continue
 
             # Complex dependency with other attributes
-            # Convert to inline table format for more complex dependencies
             dep_str = name
             if version:
                 processed_version = self._process_version(version)

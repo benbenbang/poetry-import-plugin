@@ -2,12 +2,8 @@
 PY_CACHE_DIR = $(shell find . -type d -name __pycache__)
 
 define cleanPyCache
-@while read pyCD; \
-do \
-	if [ -n "$$pyCD" ]; then \
-		rm -r $$pyCD; \
-	fi \
-done <<< $(PY_CACHE_DIR)
+	@echo "Cleaning Python cache directories..."
+	@find . -type d -name __pycache__ -exec rm -rf {} +
 endef
 
 .PHONY: build
@@ -33,10 +29,10 @@ publish:
 .PHONY: clean
 ## Remove build, dist, and *.egg-info directories after build or installation
 clean:
-	@-rm -r build
-	@-rm -r dist
-	@-rm -r oqim.egg-info
-	@-$(call cleanPyCache)
+	@-rm -rf build
+	@-rm -rf dist
+	@-rm -rf *.egg-info
+	$(call cleanPyCache)
 
 .DEFAULT_GOAL := help
 
